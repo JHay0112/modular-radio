@@ -109,3 +109,19 @@ void *queue_get(queue_t *queue) {
 
     return data;
 }
+
+/**
+ * Determines if there are any items in the queue.
+ * Requires a lock on the queue.
+ */
+bool queue_empty(queue_t *queue) {
+
+    bool is_empty;
+
+    pthread_mutex_lock(&(queue->lock));
+    // Kind of inferring here... should be reliable though :/
+    is_empty = queue->head == NULL;
+    pthread_mutex_unlock(&(queue->lock));
+
+    return is_empty;
+}

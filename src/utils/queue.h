@@ -10,10 +10,11 @@
 
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 
-typedef struct {
-    queue_item_t *next;
+typedef struct queue_item_s {
+    struct queue_item_s *next;
     void *data;
 } queue_item_t;
 
@@ -28,5 +29,6 @@ typedef struct {
 void queue_init(queue_t *queue);
 void queue_add(queue_t *queue, void *data);
 void *queue_get(queue_t *queue);
+bool queue_empty(queue_t *queue);
 
 #endif
