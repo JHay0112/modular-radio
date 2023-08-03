@@ -25,9 +25,8 @@ typedef struct {
 } queue_t;
 
 
-queue_t *queue_init(void);
+void queue_init(queue_t *queue);
 void queue_add(queue_t *queue, void *data);
 void *queue_get(queue_t *queue);
-void queue_free(queue_t *queue);
 
 #endif

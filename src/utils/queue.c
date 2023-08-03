@@ -12,21 +12,12 @@
 
 
 /**
- * Allocates an empty queue and returns a pointer to it.
+ * Initialises a queue.
  */
-queue_t *queue_init(void) {
+void queue_init(queue_t *queue) {
 
     int semaphore_status;
     int mutex_status;
-    queue_t *queue = (queue_t *) malloc(sizeof(queue));
-    
-    if (queue == NULL) {
-        perror("Memory could not be allocated for queue.");
-        exit(EXIT_FAILURE);
-    }
-
-    queue->head = NULL;
-    queue->tail = NULL;
     
     semaphore_status = sem_init(&(queue->n), false, 0);
 
@@ -41,8 +32,6 @@ queue_t *queue_init(void) {
         perror("Could not initalise queue mutex.");
         exit(EXIT_FAILURE);
     }
-
-    return queue;
 }
 
 /**
@@ -119,27 +108,4 @@ void *queue_get(queue_t *queue) {
     free(old_head);
 
     return data;
-}
-
-/**
- * Frees a queue and all the items on the queue.
- */
-void queue_free(queue_t *queue) {
-
-    queue_item_t *item;
-
-    pthread_mutex_lock(&(queue->lock));
-
-    while (queue->head != NULL) {
-        item = queue->head;
-        queue->head = item->next;
-        free(item);
-    }
-
-    free(queue->tail);
-
-    pthread_mutex_destroy(&(queue->lock));
-    sem_destroy(&(queue->n));
-
-    free(queue);
 }
