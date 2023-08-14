@@ -14,15 +14,22 @@
 /**
  * Initialises a queue.
  */
-void queue_init(queue_t *queue) {
+void queue_init(queue_t *queue, size_t capacity) {
 
     int semaphore_status;
     int mutex_status;
     
-    semaphore_status = sem_init(&(queue->n), false, 0);
+    semaphore_status = sem_init(&(queue->n_items), false, 0);
 
     if (semaphore_status == -1) {
         perror("Could not initialise queue semaphore.");
+        exit(EXIT_FAILURE);
+    }
+
+    semaphore_status = sem_init(&(queue->capacity), false, capacity);
+
+    if (semaphore_status == -1) {
+        perror("Could not initialise queue capacity semaphore.");
         exit(EXIT_FAILURE);
     }
 
@@ -51,6 +58,7 @@ void queue_add(queue_t *queue, void *data) {
 
     // About to do queue operation...
     pthread_mutex_lock(&(queue->lock));
+    sem_wait(&(queue->capacity));
 
     if (queue->tail == NULL) {
         // Empty tail implies empty queue
@@ -70,8 +78,7 @@ void queue_add(queue_t *queue, void *data) {
 
     // No longer operating on queue...
     pthread_mutex_unlock(&(queue->lock));
-
-    sem_post(&(queue->n));
+    sem_post(&(queue->n_items));
 }
 
 /**
@@ -83,9 +90,7 @@ void *queue_get(queue_t *queue) {
     queue_item_t *old_head;
     
     // Wait for items to be on the queue
-    sem_wait(&(queue->n));
-
-    // Then get a lock on queue operations
+    sem_wait(&(queue->n_items));
     pthread_mutex_lock(&(queue->lock));
 
     if (queue->head == NULL) {
@@ -106,6 +111,7 @@ void *queue_get(queue_t *queue) {
     pthread_mutex_unlock(&(queue->lock));
 
     free(old_head);
+    sem_post(&(queue->capacity));
 
     return data;
 }
