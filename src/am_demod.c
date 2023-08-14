@@ -24,6 +24,7 @@
 
 
 #define NUM_WORKERS 3
+#define QUEUE_CAPACITY 20
 
 
 static pthread_t workers[NUM_WORKERS];
@@ -51,10 +52,12 @@ void worker(void) {
 int main(void) {
 
     float in;
+    size_t data_in = 0;
+    size_t data_out = 0;
 
     // Initialise queues
-    queue_init(&in_queue);
-    queue_init(&out_queue);
+    queue_init(&in_queue, QUEUE_CAPACITY);
+    queue_init(&out_queue, QUEUE_CAPACITY);
 
     // Setup worker pool
     for (size_t i = 0; i < NUM_WORKERS; i++) {
@@ -65,12 +68,20 @@ int main(void) {
         float *data = (float *) malloc(sizeof(float));
         *data = in;
         queue_add(&in_queue, (void *) data);
+        data_in++;
     }
 
-    while (!queue_empty(&out_queue)) {
+    while (data_out < data_in) {
         // Get all the data out
         float *data = queue_get(&out_queue);
         printf("%f\n", *data);
         free(data);
+        data_out++;
+    }
+
+    // Clean up worker pool
+    for (size_t i = 0; i < NUM_WORKERS; i++) {
+        pthread_cancel(workers[i]);
+        pthread_join(workers[i], NULL);
     }
 }
