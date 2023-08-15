@@ -24,7 +24,7 @@ typedef struct {
     queue_item_t *tail;
     sem_t capacity;
     sem_t n_items;
-    pthread_mutex_t lock;
+    pthread_mutex_t change_lock;
 } queue_t;
 
 

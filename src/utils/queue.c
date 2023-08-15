@@ -33,10 +33,10 @@ void queue_init(queue_t *queue, size_t capacity) {
         exit(EXIT_FAILURE);
     }
 
-    mutex_status = pthread_mutex_init(&(queue->lock), NULL);
+    mutex_status = pthread_mutex_init(&(queue->change_lock), NULL);
 
     if (mutex_status == -1) {
-        perror("Could not initalise queue mutex.");
+        perror("Could not initalise queue change mutex.");
         exit(EXIT_FAILURE);
     }
 }
@@ -57,8 +57,8 @@ void queue_add(queue_t *queue, void *data) {
     item->data = data;
 
     // About to do queue operation...
-    pthread_mutex_lock(&(queue->lock));
     sem_wait(&(queue->capacity));
+    pthread_mutex_lock(&(queue->change_lock));
 
     if (queue->tail == NULL) {
         // Empty tail implies empty queue
@@ -77,7 +77,7 @@ void queue_add(queue_t *queue, void *data) {
     }
 
     // No longer operating on queue...
-    pthread_mutex_unlock(&(queue->lock));
+    pthread_mutex_unlock(&(queue->change_lock));
     sem_post(&(queue->n_items));
 }
 
@@ -91,7 +91,7 @@ void *queue_get(queue_t *queue) {
     
     // Wait for items to be on the queue
     sem_wait(&(queue->n_items));
-    pthread_mutex_lock(&(queue->lock));
+    pthread_mutex_lock(&(queue->change_lock));
 
     if (queue->head == NULL) {
         // Uh-oh! That shouldn't be empty
@@ -108,7 +108,7 @@ void *queue_get(queue_t *queue) {
     }
 
     // Finished operating on the queue
-    pthread_mutex_unlock(&(queue->lock));
+    pthread_mutex_unlock(&(queue->change_lock));
 
     free(old_head);
     sem_post(&(queue->capacity));
@@ -124,10 +124,10 @@ bool queue_empty(queue_t *queue) {
 
     bool is_empty;
 
-    pthread_mutex_lock(&(queue->lock));
+    pthread_mutex_lock(&(queue->change_lock));
     // Kind of inferring here... should be reliable though :/
     is_empty = queue->head == NULL;
-    pthread_mutex_unlock(&(queue->lock));
+    pthread_mutex_unlock(&(queue->change_lock));
 
     return is_empty;
 }
