@@ -12,25 +12,27 @@ SRCDIR = ./src
 
 # Targets
 
-channel: setup $(OBJDIR)/channel.out
-am_demod: setup $(OBJDIR)/am_demod.out
+all: channel am_demod
+
+channel: $(OBJDIR)/channel.out
+am_demod: $(OBJDIR)/am_demod.out
 
 
 # Recipes
 
-$(OBJDIR)/utils/queue.o: $(SRCDIR)/utils/queue.c $(SRCDIR)/utils/queue.h
+$(OBJDIR)/utils/queue.o: $(SRCDIR)/utils/queue.c $(SRCDIR)/utils/queue.h | setup
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(OBJDIR)/channel.o: $(SRCDIR)/channel.c
+$(OBJDIR)/channel.o: $(SRCDIR)/channel.c | setup
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(OBJDIR)/channel.out: $(OBJDIR)/channel.o
+$(OBJDIR)/channel.out: $(OBJDIR)/channel.o | setup
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 
-$(OBJDIR)/am_demod.o: $(SRCDIR)/am_demod.c $(SRCDIR)/utils/queue.h
+$(OBJDIR)/am_demod.o: $(SRCDIR)/am_demod.c $(SRCDIR)/utils/queue.h | setup
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(OBJDIR)/am_demod.out: $(OBJDIR)/am_demod.o $(OBJDIR)/utils/queue.o
+$(OBJDIR)/am_demod.out: $(OBJDIR)/am_demod.o $(OBJDIR)/utils/queue.o | setup
 	$(CC) $(CFLAGS) $^ -o $@ -lm -lpthread
 
 
@@ -46,4 +48,4 @@ setup:
 # Cleans up the build directory after use
 .PHONY: clean
 clean: 
-	$(DEL) -rf ./build
+	$(DEL) -rf $(OBJDIR)
